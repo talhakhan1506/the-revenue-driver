@@ -1,5 +1,6 @@
 import streamlit as st
 from groq import Groq
+from fpdf import FPDF
 
 # Page layout configuration
 st.set_page_config(
@@ -9,7 +10,38 @@ st.set_page_config(
 )
 
 st.title("⚡ The Revenue Driver: Multi-Agent AI Growth Swarm")
-st.write("Deploy a specialized swarm of 3 AI agents to analyze competitors, draft high-converting Meta ads, and map out email funnels.")
+st.write("Deploy a specialized swarm of 3 AI agents powered by `openai/gpt-oss-120b` to analyze competitors, draft high-converting Meta ads, and map out email funnels.")
+
+# Helper function to sanitize text for standard PDF generation
+def clean_text_for_pdf(text):
+    return text.encode('latin-1', 'replace').decode('latin-1')
+
+# Helper function to build PDF report
+def generate_pdf_report(product_url, target_audience, agent1_out, agent2_out, agent3_out):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.cell(0, 10, "The Revenue Driver - Growth Swarm Report", ln=True, align="C")
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 8, f"Product URL: {product_url}", ln=True)
+    pdf.cell(0, 8, f"Target Audience: {target_audience}", ln=True)
+    pdf.ln(5)
+
+    sections = [
+        ("Agent 1: SEO & Competitor Analysis", agent1_out),
+        ("Agent 2: Meta Ad Variations", agent2_out),
+        ("Agent 3: 30-Day Email Funnel", agent3_out)
+    ]
+
+    for title, content in sections:
+        pdf.set_font("Helvetica", "B", 12)
+        pdf.cell(0, 8, title, ln=True)
+        pdf.set_font("Helvetica", "", 9)
+        cleaned_content = clean_text_for_pdf(content)
+        pdf.multi_cell(0, 5, cleaned_content)
+        pdf.ln(5)
+
+    return pdf.output()
 
 # Sidebar for Groq API Key
 with st.sidebar:
@@ -20,6 +52,8 @@ with st.sidebar:
     st.markdown("1. 🔍 **Agent 1:** SEO & Competitor Analyst")
     st.markdown("2. 📣 **Agent 2:** Direct-Response Copywriter")
     st.markdown("3. ✉️ **Agent 3:** Lifecycle Email Strategist")
+    st.markdown("---")
+    st.markdown("⚡ **Model Engine:** `openai/gpt-oss-120b`")
 
 # Business input fields
 col1, col2 = st.columns(2)
@@ -139,6 +173,56 @@ if st.button("🚀 Launch Growth Swarm", type="primary"):
                 st.markdown(agent3_output)
 
             st.success("✅ Multi-Agent Swarm execution complete!")
+
+            # -------------------------------------------------------------
+            # DOWNLOAD OPTIONS (.txt and .pdf)
+            # -------------------------------------------------------------
+            st.markdown("---")
+            st.subheader("📥 Export Complete Strategy Report")
+
+            # Prepare Plain Text Output
+            full_txt_report = f"""THE REVENUE DRIVER - MULTI-AGENT AI GROWTH SWARM REPORT
+Product URL: {product_url}
+Target Audience: {target_audience}
+
+==================================================
+AGENT 1: COMPETITOR & SEO ANALYSIS
+==================================================
+{agent1_output}
+
+==================================================
+AGENT 2: HYPER-TARGETED META AD VARIATIONS
+==================================================
+{agent2_output}
+
+==================================================
+AGENT 3: 30-DAY LIFECYCLE EMAIL FUNNEL
+==================================================
+{agent3_output}
+"""
+
+            # Prepare PDF Output
+            pdf_bytes = generate_pdf_report(
+                product_url, target_audience, agent1_output, agent2_output, agent3_output
+            )
+
+            d_col1, d_col2 = st.columns(2)
+
+            with d_col1:
+                st.download_button(
+                    label="📄 Download Report (.txt)",
+                    data=full_txt_report,
+                    file_name="revenue_driver_growth_report.txt",
+                    mime="text/plain"
+                )
+
+            with d_col2:
+                st.download_button(
+                    label="📕 Download Report (.pdf)",
+                    data=bytes(pdf_bytes),
+                    file_name="revenue_driver_growth_report.pdf",
+                    mime="application/pdf"
+                )
 
         except Exception as e:
             st.error(f"An error occurred during swarm execution: {str(e)}")
