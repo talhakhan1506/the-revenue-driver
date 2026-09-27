@@ -37,7 +37,7 @@ if st.button("🚀 Launch Growth Swarm", type="primary"):
     else:
         try:
             client = Groq(api_key=groq_api_key)
-            model_name = "llama-3.1-8b-instant"
+            model_name = "openai/gpt-oss-120b"
 
             # -------------------------------------------------------------
             # AGENT 1: Competitor & SEO Analyst
